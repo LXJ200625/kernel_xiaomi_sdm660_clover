@@ -2260,6 +2260,10 @@ static int selinux_vm_enough_memory(struct mm_struct *mm, long pages)
 	return cap_sys_admin;
 }
 
+#ifdef CONFIG_KSU_MANUAL_HOOK
+extern bool is_ksu_transition(const struct task_security_struct *old_tsec, 
+				const struct task_security_struct *new_tsec);
+#endif
 /* binprm security operations */
 
 static int check_nnp_nosuid(const struct linux_binprm *bprm,
@@ -2293,6 +2297,11 @@ static int check_nnp_nosuid(const struct linux_binprm *bprm,
 		if (rc == 0 && new_tsec->sid == ksu_sid)
 			return 0;
 	}
+#endif
+
+#ifdef CONFIG_KSU_MANUAL_HOOK
+	if (is_ksu_transition(old_tsec, new_tsec))
+		return 0;
 #endif
 
 	/*
